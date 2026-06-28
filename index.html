@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Falling into the Irrationals</title>
+<meta name="description" content="A live, zooming visualization of how fractions chase irrational numbers like π, e, √2 and the golden ratio — and why some numbers are nearly impossible to pin down with a fraction." />
+<meta property="og:title" content="Falling into the Irrationals" />
+<meta property="og:description" content="Watch fractions chase π, e, √2 and the golden ratio. The gold flares are the best approximations there are." />
+<meta property="og:type" content="website" />
+<style>
+  html,body{margin:0;background:#08090d;color:#e8ecf3;font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+  .wrap{max-width:1080px;margin:0 auto;padding:22px}
+  h1{font-size:23px;margin:0 0 2px;font-weight:700}
+  .sub{color:#8a94a6;margin:0 0 14px;font-size:14px}
+  .stage{position:relative;border:1px solid #1c2230;border-radius:14px;overflow:hidden;background:#0b0d12}
+  canvas{display:block;width:100%;height:600px}
+  .hud{position:absolute;pointer-events:none;font-variant-numeric:tabular-nums}
+  .tl{top:14px;left:16px} .tr{top:14px;right:16px;text-align:right} .bl{bottom:14px;left:16px}
+  .now{font-size:30px;font-weight:700;color:#ffd479;text-shadow:0 0 18px rgba(255,212,121,.5)}
+  .now small{font-size:14px;color:#c9b079;font-weight:500}
+  .lab{color:#7c88a0;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+  .big{font-size:20px;color:#cfe0ff;font-weight:600}
+  .target{position:absolute;top:14px;left:50%;transform:translateX(-50%);text-align:center}
+  .target .sym{font-size:26px;font-weight:700;color:#dfe7f5}
+  .passed{color:#6f7d96;font-size:12.5px;max-width:520px;line-height:1.8}
+  .passed b{color:#9db8e6;font-weight:600}
+  .controls{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
+  button,select{background:#161a22;color:#e8ecf3;border:1px solid #2a3140;border-radius:9px;padding:8px 14px;font-size:14px;cursor:pointer}
+  button:hover,select:hover{border-color:#6ea8fe}
+  select{font-weight:600}
+  #rec.recording{border-color:#ff8f8f;color:#ff8f8f}
+  input[type=range]{accent-color:#6ea8fe}
+  .note{color:#717c91;font-size:13px;margin-top:14px;line-height:1.65}
+  .k{color:#ffd479}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Falling into the Irrationals</h1>
+  <p class="sub">Every irrational number is surrounded by fractions trying to land on it — and never quite succeeding. Zoom in forever, and watch which ones come closest. The brightest, <span class="k">gold</span> beams are the best approximations there are.</p>
+
+  <div class="stage">
+    <canvas id="c"></canvas>
+    <div class="hud tl">
+      <div class="lab">now passing</div>
+      <div class="now" id="now">—</div>
+    </div>
+    <div class="hud target"><div class="sym" id="sym">π</div><div class="lab">you are here</div></div>
+    <div class="hud tr">
+      <div class="lab">zoom</div><div class="big" id="zoom">×1</div>
+      <div class="lab" style="margin-top:8px">window width</div><div class="big" id="ww" style="font-size:15px">—</div>
+      <div class="lab" style="margin-top:8px">deepest denominator</div><div class="big" id="qmax" style="font-size:15px">—</div>
+    </div>
+    <div class="hud bl">
+      <div class="lab">convergents passed</div>
+      <div class="passed" id="passed">—</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <label class="lab" for="num">number</label>
+    <select id="num"></select>
+    <button id="play">⏸ Pause</button>
+    <button id="restart">↺ Restart</button>
+    <button id="rec">● Record</button>
+    <span class="lab">slow</span>
+    <input id="speed" type="range" min="0.01" max="1.0" step="0.005" value="0.06" />
+    <span class="lab">fast</span>
+    <label class="lab" style="display:flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;cursor:pointer"><input type="checkbox" id="hl" checked> gold = approximation quality</label>
+  </div>
+
+  <div class="note">
+    <h3 style="color:#cfe0ff;font-size:16px;margin:0 0 6px">How to read this</h3>
+    <p>You're falling, forever, toward a single point on the number line — an irrational number, which by definition no fraction ever lands on exactly. Every vertical line is a fraction p/q. The brighter it burns, the better that fraction pins the number at this depth; a beam turns <span class="k">gold</span> when a fraction is unusually good for the size of its denominator. The gold flares you fall past are the number's <b>continued-fraction convergents</b> — its all-time best approximations, the ones we actually use. (That blaze at <span class="k">355/113</span> is the classic approximation of π, right to seven decimals.)</p>
+    <p><b>Watch them alternate.</b> The convergents always straddle the target — one just above, the next just below, each closer than the last, never two in a row on the same side. The dim ladders between flares are the near-misses climbing toward the next record.</p>
+    <p><b>Some numbers won't be caught.</b> The golden ratio <span class="k">φ</span>, <span class="k">√2</span>, and <span class="k">√5</span> are the stubborn ones: their flares are evenly spaced and never especially bright, because they are the hardest numbers in existence to approximate with fractions. <span class="k">e</span> approaches in gentle, widening pulses. <span class="k">π</span> is the wild one — long stretches of near-darkness, then a colossal flare, because its continued fraction hides one freakishly large term that makes 355/113 almost suspiciously good.</p>
+    <p style="color:#5c6679;font-size:12.5px;margin-top:16px;border-top:1px solid #1c2230;padding-top:12px">Drawn live in your browser: a Stern–Brocot descent toward the target, each fraction tinted by its approximation quality D = q·|qα − p|. Drag toward <i>slow</i> for the full meditative fall; hit <i>Record</i> to save a clip.</p>
+  </div>
+</div>
+
+<script>
+function rep(a,n){const o=[];for(let i=0;i<n;i++)o.push(...a);return o;}
+const eCF=[]; for(let k=1;k<20;k++) eCF.push(1,2*k,1);
+const NUMBERS = {
+  'π':            {value:Math.PI,             cf:[7,15,1,292,1,1,1,2,1,3,1,14,2,1,1,2,2,2,2,1,84,2,1,1,15,3,13]},
+  'e':            {value:Math.E,              cf:eCF},
+  '√2':           {value:Math.SQRT2,          cf:rep([2],60)},
+  '√3':           {value:Math.sqrt(3),        cf:rep([1,2],40)},
+  '√5':           {value:Math.sqrt(5),        cf:rep([4],60)},
+  'φ (golden ratio)':  {value:(1+Math.sqrt(5))/2, cf:rep([1],80)},
+  '1+√2 (silver ratio)':{value:1+Math.SQRT2,  cf:rep([2],60)},
+  'ln 2':         {value:Math.LN2,            cf:[1,2,3,1,6,3,1,1,2,1,1,1,1,3,10,1,1,1,2]},
+};
+
+// ---------- state ----------
+let TARGET, intPart, curSym, curName, convs=[], convKey=new Set();
+function buildConvergents(cf, value){
+  intPart = Math.floor(value); TARGET = value - intPart;
+  const out=[]; let ppm=1,qqm=0,pp=0,qq=1;
+  for(const a of cf){
+    const p=a*pp+ppm, q=a*qq+qqm; ppm=pp;qqm=qq;pp=p;qq=q;
+    if(q>1e15) break;
+    const full=p+intPart*q;
+    const delta=Math.abs(TARGET - p/q);
+    const digits=Math.max(0,Math.floor(-Math.log10(Math.abs(value - full/q)+1e-300)));
+    out.push({p,q,delta,label:full+"/"+q,digits});
+  }
+  return out;
+}
+const W0=0.22; let w=W0, running=true, dps=0.06, hlOn=true, atBottom=false, lastT=null;
+function setNumber(name){
+  curName=name; const N=NUMBERS[name]; curSym=name.split(' ')[0];
+  convs=buildConvergents(N.cf, N.value);
+  convKey=new Set(convs.map(c=>c.p+"/"+c.q));
+  document.getElementById('sym').textContent=curSym;
+  w=W0; atBottom=false; passedSeen.clear();
+}
+
+// fade horizon: lines ramp from invisible (prom=PROM_H) to full (PROM_FULL) — no popping in
+const PROM_H=0.0016, PROM_FULL=0.03;
+function smoothstep(a,b,x){ let t=(x-a)/(b-a); t=t<0?0:(t>1?1:t); return t*t*(3-2*t); }
+
+// ---------- Stern–Brocot descent: fractions in (lo,hi), denom ≤ Qmax ----------
+function enumerate(lo,hi,Qmax){
+  const out=[]; const st=[[0,1,1,1]]; let guard=0;
+  while(st.length && guard++<80000){
+    const f=st.pop(); const a=f[0],b=f[1],c=f[2],d=f[3];
+    const mb=b+d; if(mb>Qmax) continue;
+    const ma=a+c, m=ma/mb;
+    if(m>=lo && m<=hi) out.push([ma,mb]);
+    if(a/b < hi && m > lo) st.push([a,b,ma,mb]);
+    if(m < hi && c/d > lo) st.push([ma,mb,c,d]);
+    if(out.length>6000) break;
+  }
+  return out;
+}
+
+// ---------- canvas ----------
+const cv=document.getElementById('c'), ctx=cv.getContext('2d');
+let W=0,H=0,DPR=Math.min(2,window.devicePixelRatio||1);
+function resize(){const r=cv.getBoundingClientRect();W=r.width;H=r.height;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);}
+window.addEventListener('resize',resize); resize();
+
+const elNow=document.getElementById('now'),elZoom=document.getElementById('zoom'),elWW=document.getElementById('ww'),
+      elQ=document.getElementById('qmax'),elPassed=document.getElementById('passed');
+const passedSeen=new Set();
+function sci(x){const e=Math.floor(Math.log10(x));return (x/Math.pow(10,e)).toFixed(2)+"e"+e;}
+
+function frame(t){
+  if(lastT==null) lastT=t;
+  const dt=Math.min(0.05,(t-lastT)/1000); lastT=t;
+  const lo=TARGET-w/2, hi=TARGET+w/2;
+  const Qmax=Math.min(1e8, Math.sqrt(1/(w*PROM_H)));
+  const fr=enumerate(lo,hi,Qmax);
+
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#0b0d12'); g.addColorStop(1,'#070809');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H); ctx.lineCap='round';
+
+  // one beam per fraction: brightness from prominence, hue→gold from approximation quality, NO thickness encoding
+  const lines=[];
+  for(const [p,q] of fr){
+    const prom=1/(q*q*w);
+    const v=smoothstep(PROM_H,PROM_FULL,prom); if(v<=0) continue;
+    const x=((p/q)-lo)/w*W;
+    const D=q*q*Math.abs(TARGET-p/q);                    // approximation quality: small = better
+    const gold=hlOn ? 1/(1+Math.pow(D/0.45,1.6)) : 0;    // 0 (blue) … 1 (gold)
+    const a=v*Math.min(1,Math.pow(prom,0.5));            // brightness rises steadily with prominence
+    lines.push([x,a,gold,prom,p,q]);
+  }
+  lines.sort((A,B)=>A[2]-B[2]);                          // bluest first, goldest drawn on top
+  ctx.lineWidth=1.25;
+  for(const ln of lines){
+    const x=ln[0],a=ln[1],gold=ln[2],prom=ln[3],p=ln[4],q=ln[5];
+    const r=(150+105*gold)|0, gg=(190+20*gold)|0, b=(255-135*gold)|0;
+    ctx.save();
+    if(gold>0.02){ ctx.shadowColor='rgba(255,200,110,'+(a*gold).toFixed(3)+')'; ctx.shadowBlur=18*gold*Math.min(1,prom); }
+    ctx.strokeStyle='rgba('+r+','+gg+','+b+','+a.toFixed(3)+')';
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+    ctx.restore();
+    if(gold>0.55 && prom>0.2 && convKey.has(p+"/"+q)){ const c=convs.find(cc=>cc.p===p&&cc.q===q);
+      if(c){ ctx.fillStyle='rgba(255,224,150,'+Math.min(1,a+0.2)+')'; ctx.font='12px -apple-system,Segoe UI,Arial'; ctx.fillText(c.label,x+6,22); } }
+  }
+  ctx.strokeStyle='rgba(120,140,170,0.30)'; ctx.lineWidth=1; ctx.setLineDash([4,5]);
+  ctx.beginPath(); ctx.moveTo(W/2,0); ctx.lineTo(W/2,H); ctx.stroke(); ctx.setLineDash([]);
+
+  let gov=null; for(const c of convs){ if(c.delta<w/2 && (!gov||c.q<gov.q)) gov=c; }
+  elNow.innerHTML = (gov ? (gov.label+' <small>· '+gov.digits+' digits</small>') : '—') + (atBottom?' <small style="color:#7c88a0">· floor reached</small>':'');
+  elZoom.textContent='×'+sci(W0/w); elWW.textContent=sci(w); elQ.textContent=Math.round(Qmax).toLocaleString();
+  const passed=convs.filter(c=>c.delta>=w/2);
+  elPassed.innerHTML = passed.length ? passed.slice(-9).map(c=>'<b>'+c.label+'</b>').join(' &nbsp;›&nbsp; ') : '(none yet — keep falling)';
+
+  if(running && !atBottom){ w*=Math.pow(10,-dps*dt); if(w<1e-13){ w=1e-13; atBottom=true; } }
+  requestAnimationFrame(frame);
+}
+
+// ---------- controls ----------
+const sel=document.getElementById('num');
+for(const k of Object.keys(NUMBERS)){ const o=document.createElement('option'); o.value=k; o.textContent=k; sel.appendChild(o); }
+sel.onchange=()=>setNumber(sel.value);
+document.getElementById('play').onclick=function(){running=!running;this.textContent=running?'⏸ Pause':'▶ Play';};
+document.getElementById('restart').onclick=()=>{w=W0;atBottom=false;passedSeen.clear();};
+document.getElementById('speed').oninput=function(){dps=parseFloat(this.value);};
+document.getElementById('hl').onchange=function(){hlOn=this.checked;};
+
+// ---------- record to .webm ----------
+let rec=null, chunks=[];
+const recBtn=document.getElementById('rec');
+recBtn.onclick=()=>{
+  if(rec && rec.state==='recording'){ rec.stop(); return; }
+  const stream=cv.captureStream(30);
+  rec=new MediaRecorder(stream,{mimeType:'video/webm'}); chunks=[];
+  rec.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
+  rec.onstop=()=>{ const blob=new Blob(chunks,{type:'video/webm'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download='falling-into-'+curSym+'.webm'; a.click();
+    recBtn.textContent='● Record'; recBtn.classList.remove('recording'); };
+  rec.start(); recBtn.textContent='⏹ Stop & save'; recBtn.classList.add('recording');
+};
+
+setNumber('π');
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
