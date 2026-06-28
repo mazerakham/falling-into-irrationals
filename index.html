@@ -38,7 +38,7 @@
 <body>
 <div class="wrap">
   <h1>Falling into the Irrationals</h1>
-  <p class="sub">Every irrational number is surrounded by fractions trying to land on it — and never quite succeeding. Zoom in forever, and watch which ones come closest. The brightest, <span class="k">gold</span> beams are the best approximations there are.</p>
+  <p class="sub">Every irrational number is surrounded by fractions trying to land on it — and never quite succeeding. Zoom in forever and watch which ones come closest. The glowing, labelled beams are the best approximations there are — <span style="color:#f2b2b4">red</span> on the left of the number, <span style="color:#b4c7f6">blue</span> on the right.</p>
 
   <div class="stage">
     <canvas id="c"></canvas>
@@ -49,12 +49,6 @@
     <div class="hud target"><div class="sym" id="sym">π</div><div class="lab">you are here</div></div>
     <div class="hud tr">
       <div class="lab">zoom</div><div class="big" id="zoom">×1</div>
-      <div class="lab" style="margin-top:8px">window width</div><div class="big" id="ww" style="font-size:15px">—</div>
-      <div class="lab" style="margin-top:8px">deepest denominator</div><div class="big" id="qmax" style="font-size:15px">—</div>
-    </div>
-    <div class="hud bl">
-      <div class="lab">convergents passed</div>
-      <div class="passed" id="passed">—</div>
     </div>
   </div>
 
@@ -67,22 +61,24 @@
     <span class="lab">slow</span>
     <input id="speed" type="range" min="0.01" max="1.0" step="0.005" value="0.06" />
     <span class="lab">fast</span>
-    <label class="lab" style="display:flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;cursor:pointer"><input type="checkbox" id="hl" checked> gold = approximation quality</label>
+    <label class="lab" style="display:flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;cursor:pointer"><input type="checkbox" id="hl" checked> mark convergents</label>
   </div>
 
   <div class="note">
     <h3 style="color:#cfe0ff;font-size:16px;margin:0 0 6px">How to read this</h3>
-    <p>You're falling, forever, toward a single point on the number line — an irrational number, which by definition no fraction ever lands on exactly. Every vertical line is a fraction p/q. The brighter it burns, the better that fraction pins the number at this depth; a beam turns <span class="k">gold</span> when a fraction is unusually good for the size of its denominator. The gold flares you fall past are the number's <b>continued-fraction convergents</b> — its all-time best approximations, the ones we actually use. (That blaze at <span class="k">355/113</span> is the classic approximation of π, right to seven decimals.)</p>
+    <p>You're falling, forever, toward a single point on the number line — an irrational number, which by definition no fraction ever lands on exactly. Every vertical line is a fraction p/q. The brighter it burns, the better that fraction pins the number at this depth, and each beam is coloured by which side it's on — <span style="color:#f2b2b4">red</span> to the left of the target, <span style="color:#b4c7f6">blue</span> to the right. The <b>convergents</b> — the number's all-time best approximations, the ones we actually use — are the beams that glow and carry a label as you fall past. (That blaze at <span class="k">355/113</span> is the classic approximation of π, right to seven decimals.)</p>
     <p><b>Watch them alternate.</b> The convergents always straddle the target — one just above, the next just below, each closer than the last, never two in a row on the same side. The dim ladders between flares are the near-misses climbing toward the next record.</p>
     <p><b>Some numbers won't be caught.</b> The golden ratio <span class="k">φ</span>, <span class="k">√2</span>, and <span class="k">√5</span> are the stubborn ones: their flares are evenly spaced and never especially bright, because they are the hardest numbers in existence to approximate with fractions. <span class="k">e</span> approaches in gentle, widening pulses. <span class="k">π</span> is the wild one — long stretches of near-darkness, then a colossal flare, because its continued fraction hides one freakishly large term that makes 355/113 almost suspiciously good.</p>
-    <p style="color:#5c6679;font-size:12.5px;margin-top:16px;border-top:1px solid #1c2230;padding-top:12px">Drawn live in your browser: a Stern–Brocot descent toward the target, each fraction tinted by its approximation quality D = q·|qα − p|. Drag toward <i>slow</i> for the full meditative fall; hit <i>Record</i> to save a clip.</p>
+    <p style="color:#5c6679;font-size:12.5px;margin-top:16px;border-top:1px solid #1c2230;padding-top:12px">Drawn live in your browser: a Stern–Brocot descent toward the target. Drag toward <i>slow</i> for the full meditative fall; hit <i>Record</i> to save a clip.</p>
   </div>
 </div>
 
 <script>
 function rep(a,n){const o=[];for(let i=0;i<n;i++)o.push(...a);return o;}
 const eCF=[]; for(let k=1;k<20;k++) eCF.push(1,2*k,1);
+function cfTail(value,n){ let x=value-Math.floor(value); const t=[]; for(let i=0;i<n;i++){ if(x<1e-12)break; x=1/x; const a=Math.floor(x); if(a>100000)break; t.push(a); x-=a; } return t; }
 const NUMBERS = {
+  'τ (tau)':      {value:2*Math.PI,           cf:cfTail(2*Math.PI,13)},
   'π':            {value:Math.PI,             cf:[7,15,1,292,1,1,1,2,1,3,1,14,2,1,1,2,2,2,2,1,84,2,1,1,15,3,13]},
   'e':            {value:Math.E,              cf:eCF},
   '√2':           {value:Math.SQRT2,          cf:rep([2],60)},
@@ -142,8 +138,7 @@ let W=0,H=0,DPR=Math.min(2,window.devicePixelRatio||1);
 function resize(){const r=cv.getBoundingClientRect();W=r.width;H=r.height;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);}
 window.addEventListener('resize',resize); resize();
 
-const elNow=document.getElementById('now'),elZoom=document.getElementById('zoom'),elWW=document.getElementById('ww'),
-      elQ=document.getElementById('qmax'),elPassed=document.getElementById('passed');
+const elNow=document.getElementById('now'),elZoom=document.getElementById('zoom');
 const passedSeen=new Set();
 function sci(x){const e=Math.floor(Math.log10(x));return (x/Math.pow(10,e)).toFixed(2)+"e"+e;}
 
@@ -157,38 +152,46 @@ function frame(t){
   const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#0b0d12'); g.addColorStop(1,'#070809');
   ctx.fillStyle=g; ctx.fillRect(0,0,W,H); ctx.lineCap='round';
 
-  // one beam per fraction: brightness from prominence, hue→gold from approximation quality, NO thickness encoding
-  const lines=[];
+  // beam per fraction: RED if left of target, BLUE if right. convergents glow in their own side-colour and get a label — nothing else marks them.
+  const conv=[], chaff=[];
   for(const [p,q] of fr){
     const prom=1/(q*q*w);
     const v=smoothstep(PROM_H,PROM_FULL,prom); if(v<=0) continue;
     const x=((p/q)-lo)/w*W;
-    const D=q*q*Math.abs(TARGET-p/q);                    // approximation quality: small = better
-    const gold=hlOn ? 1/(1+Math.pow(D/0.45,1.6)) : 0;    // 0 (blue) … 1 (gold)
-    const a=v*Math.min(1,Math.pow(prom,0.5));            // brightness rises steadily with prominence
-    lines.push([x,a,gold,prom,p,q]);
+    const ef=smoothstep(0,W*0.13,x)*smoothstep(0,W*0.13,W-x); if(ef<=0) continue;  // fade OUT at the edges — no popping
+    const a=v*Math.min(1,Math.pow(prom,0.5))*ef;
+    const left=(TARGET-(p/q))>0;                        // true => fraction lies left of the target
+    if(hlOn && convKey.has(p+"/"+q)) conv.push([p,q,x,prom,a,left]);
+    else chaff.push([x,a,left]);
   }
-  lines.sort((A,B)=>A[2]-B[2]);                          // bluest first, goldest drawn on top
   ctx.lineWidth=1.25;
-  for(const ln of lines){
-    const x=ln[0],a=ln[1],gold=ln[2],prom=ln[3],p=ln[4],q=ln[5];
-    const r=(150+105*gold)|0, gg=(190+20*gold)|0, b=(255-135*gold)|0;
+  for(const c of chaff){                                // faint directional beams
+    const x=c[0],a=c[1],left=c[2];
+    ctx.strokeStyle=(left?'rgba(242,178,180,':'rgba(180,199,246,')+a.toFixed(3)+')';
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+  }
+  for(const cc of conv){                                // convergents: glow in their side-colour + label (the only marker)
+    const p=cc[0],q=cc[1],x=cc[2],prom=cc[3],a=cc[4],left=cc[5];
+    const glow=left?'rgba(255,110,110,':'rgba(110,165,255,';
+    const line=left?'rgba(255,142,142,':'rgba(150,186,255,';
     ctx.save();
-    if(gold>0.02){ ctx.shadowColor='rgba(255,200,110,'+(a*gold).toFixed(3)+')'; ctx.shadowBlur=18*gold*Math.min(1,prom); }
-    ctx.strokeStyle='rgba('+r+','+gg+','+b+','+a.toFixed(3)+')';
+    ctx.shadowColor=glow+(a*0.95).toFixed(3)+')'; ctx.shadowBlur=17*a*Math.min(1,prom);
+    ctx.strokeStyle=line+Math.min(1,a*1.15).toFixed(3)+')';
     ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
     ctx.restore();
-    if(gold>0.55 && prom>0.2 && convKey.has(p+"/"+q)){ const c=convs.find(cc=>cc.p===p&&cc.q===q);
-      if(c){ ctx.fillStyle='rgba(255,224,150,'+Math.min(1,a+0.2)+')'; ctx.font='12px -apple-system,Segoe UI,Arial'; ctx.fillText(c.label,x+6,22); } }
+    if(prom>0.05){ const o=convs.find(z=>z.p===p&&z.q===q);
+      if(o){ ctx.fillStyle=(left?'rgba(255,178,178,':'rgba(182,206,255,')+Math.min(1,a+0.15).toFixed(3)+')';
+        ctx.font='12px -apple-system,Segoe UI,Arial';
+        ctx.textAlign=left?'right':'left';
+        ctx.fillText(o.label, x+(left?-6:6), 22);
+        ctx.textAlign='left'; } }
   }
   ctx.strokeStyle='rgba(120,140,170,0.30)'; ctx.lineWidth=1; ctx.setLineDash([4,5]);
   ctx.beginPath(); ctx.moveTo(W/2,0); ctx.lineTo(W/2,H); ctx.stroke(); ctx.setLineDash([]);
 
   let gov=null; for(const c of convs){ if(c.delta<w/2 && (!gov||c.q<gov.q)) gov=c; }
   elNow.innerHTML = (gov ? (gov.label+' <small>· '+gov.digits+' digits</small>') : '—') + (atBottom?' <small style="color:#7c88a0">· floor reached</small>':'');
-  elZoom.textContent='×'+sci(W0/w); elWW.textContent=sci(w); elQ.textContent=Math.round(Qmax).toLocaleString();
-  const passed=convs.filter(c=>c.delta>=w/2);
-  elPassed.innerHTML = passed.length ? passed.slice(-9).map(c=>'<b>'+c.label+'</b>').join(' &nbsp;›&nbsp; ') : '(none yet — keep falling)';
+  elZoom.textContent='×'+sci(W0/w);
 
   if(running && !atBottom){ w*=Math.pow(10,-dps*dt); if(w<1e-13){ w=1e-13; atBottom=true; } }
   requestAnimationFrame(frame);
@@ -208,8 +211,10 @@ let rec=null, chunks=[];
 const recBtn=document.getElementById('rec');
 recBtn.onclick=()=>{
   if(rec && rec.state==='recording'){ rec.stop(); return; }
-  const stream=cv.captureStream(30);
-  rec=new MediaRecorder(stream,{mimeType:'video/webm'}); chunks=[];
+  const stream=cv.captureStream(60);
+  const _t=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
+  const _m=_t.find(t=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t))||'video/webm';
+  rec=new MediaRecorder(stream,{mimeType:_m, videoBitsPerSecond:25000000}); chunks=[];
   rec.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
   rec.onstop=()=>{ const blob=new Blob(chunks,{type:'video/webm'});
     const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
@@ -218,7 +223,7 @@ recBtn.onclick=()=>{
   rec.start(); recBtn.textContent='⏹ Stop & save'; recBtn.classList.add('recording');
 };
 
-setNumber('π');
+sel.value='τ (tau)'; setNumber('τ (tau)');
 requestAnimationFrame(frame);
 </script>
 </body>
